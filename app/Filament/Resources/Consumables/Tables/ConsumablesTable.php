@@ -18,8 +18,29 @@ class ConsumablesTable
     {
         return $table
             ->columns([
+                TextColumn::make('type')
+                    ->label('Tipo')
+                    ->badge(),
                 TextColumn::make('name')
                     ->searchable(),
+                TextColumn::make('part_number')
+                    ->label('N/P')
+                    ->searchable(),
+                TextColumn::make('serial_number')
+                    ->label('Serie')
+                    ->searchable(),
+                TextColumn::make('brand')
+                    ->label('Marca')
+                    ->searchable(),
+                TextColumn::make('model')
+                    ->label('Modelo')
+                    ->searchable(),
+                TextColumn::make('status')
+                    ->label('Estatus')
+                    ->badge(),
+                TextColumn::make('unit')
+                    ->label('Unidad')
+                    ->badge(),
                 TextColumn::make('stock_quantity')
                     ->numeric()
                     ->sortable(),
@@ -36,6 +57,16 @@ class ConsumablesTable
                 TextColumn::make('supplier')
                     ->label('Proveedor')
                     ->searchable(),
+                TextColumn::make('location.name')
+                    ->label('Ubicación')
+                    ->searchable(),
+                TextColumn::make('sub_location')
+                    ->label('Sub ubicación')
+                    ->searchable(),
+                TextColumn::make('notes')
+                    ->label('Nota')
+                    ->limit(40)
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

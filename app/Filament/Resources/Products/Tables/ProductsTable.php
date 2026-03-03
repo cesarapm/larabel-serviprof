@@ -29,18 +29,7 @@ class ProductsTable
                 TextColumn::make('spd_internal_id')
                     ->label('SPD/QR')
                     ->searchable(),
-                TextColumn::make('current_counter_bw')
-                    ->label('Contador BN')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('current_counter_color')
-                    ->label('Contador Color')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('counter_read_at')
-                    ->label('Fecha contador')
-                    ->date()
-                    ->sortable(),
+
                 TextColumn::make('status')
                     ->badge(),
                 TextColumn::make('inventory_status')

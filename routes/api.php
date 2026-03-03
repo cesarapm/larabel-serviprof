@@ -3,8 +3,10 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\ConsumableController;
+use App\Http\Controllers\Api\ConsumableMovementController;
 use App\Http\Controllers\Api\EquipmentMovementController;
 use App\Http\Controllers\Api\LocationController;
+use App\Http\Controllers\Api\PersonnelController;
 use App\Http\Controllers\Api\ProductController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,4 +21,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::apiResource('clients', ClientController::class);
     Route::apiResource('equipment-movements', EquipmentMovementController::class);
     Route::apiResource('consumables', ConsumableController::class);
+    Route::apiResource('consumable-movements', ConsumableMovementController::class);
+    Route::get('personnel', [PersonnelController::class, 'index']);
+    Route::get('personnel/{personnel}', [PersonnelController::class, 'show']);
 });

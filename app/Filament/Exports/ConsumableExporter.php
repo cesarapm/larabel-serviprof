@@ -17,12 +17,23 @@ class ConsumableExporter extends Exporter
         return [
             ExportColumn::make('id')
                 ->label('ID'),
+            ExportColumn::make('type'),
             ExportColumn::make('name'),
+            ExportColumn::make('part_number'),
+            ExportColumn::make('serial_number'),
+            ExportColumn::make('brand'),
+            ExportColumn::make('model'),
+            ExportColumn::make('status'),
+            ExportColumn::make('inventory_status'),
+            ExportColumn::make('unit'),
             ExportColumn::make('stock_quantity'),
             ExportColumn::make('minimum_stock'),
             ExportColumn::make('stock_reserved'),
             ExportColumn::make('batch'),
             ExportColumn::make('supplier'),
+            ExportColumn::make('location.name'),
+            ExportColumn::make('sub_location'),
+            ExportColumn::make('notes'),
             ExportColumn::make('created_at'),
             ExportColumn::make('updated_at'),
         ];

@@ -21,6 +21,10 @@ class ClientExporter extends Exporter
             ExportColumn::make('phone'),
             ExportColumn::make('email'),
             ExportColumn::make('address'),
+            ExportColumn::make('rfc'),
+            ExportColumn::make('company'),
+            ExportColumn::make('contact_name'),
+            ExportColumn::make('department'),
             ExportColumn::make('created_at'),
             ExportColumn::make('updated_at'),
         ];

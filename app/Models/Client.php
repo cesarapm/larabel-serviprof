@@ -15,6 +15,10 @@ class Client extends Model
         'phone',
         'email',
         'address',
+        'rfc',
+        'company',
+        'contact_name',
+        'department',
     ];
 
     public function equipmentMovements(): HasMany

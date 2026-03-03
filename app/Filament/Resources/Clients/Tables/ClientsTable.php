@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Clients\Tables;
 
 use App\Filament\Exports\ClientExporter;
+use Dom\Text;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -18,6 +19,14 @@ class ClientsTable
         return $table
             ->columns([
                 TextColumn::make('name')
+                    ->searchable(),
+                    TextColumn::make('rfc')
+                    ->label('RFC')
+                    ->searchable(),
+                TextColumn::make('company')
+                    ->searchable(),
+                TextColumn::make('contact_name')
+                    ->label('Contact Name')
                     ->searchable(),
                 TextColumn::make('phone')
                     ->searchable(),

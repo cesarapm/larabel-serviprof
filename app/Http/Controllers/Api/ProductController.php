@@ -9,6 +9,7 @@ use App\Models\EquipmentMovement;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
@@ -26,18 +27,31 @@ class ProductController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $data = $request->validate($this->rules());
+        $data = $request->validate(array_merge(
+            $this->rules(),
+            ['personnel_id' => ['required', 'exists:personnel,id']]
+        ));
 
         $product = DB::transaction(function () use ($data): Product {
-            $product = Product::create($data);
+            $product = Product::create(Arr::except($data, [
+                'current_counter_bw',
+                'current_counter_color',
+                'counter_read_at',
+                'personnel_id',
+            ]));
 
             EquipmentMovement::create([
                 'product_id' => $product->id,
                 'client_id' => null,
+                'location_id' => $product->location_id,
+                'personnel_id' => $data['personnel_id'],
                 'type' => 'entrada',
                 'date_out' => $product->entry_date,
                 'date_return' => null,
                 'notes' => 'Alta inicial de equipo',
+                'current_counter_bw' => $data['current_counter_bw'] ?? null,
+                'current_counter_color' => $data['current_counter_color'] ?? null,
+                'counter_read_at' => $data['counter_read_at'] ?? null,
             ]);
 
             return $product;
@@ -48,7 +62,7 @@ class ProductController extends Controller
 
     public function show(Product $product): JsonResponse
     {
-        return response()->json($product->load(['location', 'movements.client']));
+        return response()->json($product->load(['location', 'movements.client', 'movements.location', 'movements.personnel']));
     }
 
     public function update(Request $request, Product $product): JsonResponse

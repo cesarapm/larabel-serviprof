@@ -2,10 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\InventoryStatus;
 use App\Http\Controllers\Controller;
 use App\Models\EquipmentMovement;
-use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +14,7 @@ class EquipmentMovementController extends Controller
     public function index(Request $request): JsonResponse
     {
         $movements = EquipmentMovement::query()
-            ->with(['product', 'client'])
+            ->with(['product', 'client', 'location', 'personnel'])
             ->latest()
             ->paginate($request->integer('per_page', 15));
 
@@ -27,31 +25,23 @@ class EquipmentMovementController extends Controller
     {
         $data = $request->validate($this->rules());
 
-        $movement = DB::transaction(function () use ($data): EquipmentMovement {
-            $movement = EquipmentMovement::create($data);
-            $this->syncProductInventoryStatus($movement);
+        $movement = DB::transaction(fn (): EquipmentMovement => EquipmentMovement::create($data));
 
-            return $movement;
-        });
-
-        return response()->json($movement->load(['product', 'client']), 201);
+        return response()->json($movement->load(['product', 'client', 'location', 'personnel']), 201);
     }
 
     public function show(EquipmentMovement $equipmentMovement): JsonResponse
     {
-        return response()->json($equipmentMovement->load(['product', 'client']));
+        return response()->json($equipmentMovement->load(['product', 'client', 'location', 'personnel']));
     }
 
     public function update(Request $request, EquipmentMovement $equipmentMovement): JsonResponse
     {
-        $data = $request->validate($this->rules());
+        $data = $request->validate($this->rules(true));
 
-        DB::transaction(function () use ($equipmentMovement, $data): void {
-            $equipmentMovement->update($data);
-            $this->syncProductInventoryStatus($equipmentMovement->fresh());
-        });
+        DB::transaction(fn () => $equipmentMovement->update($data));
 
-        return response()->json($equipmentMovement->fresh()->load(['product', 'client']));
+        return response()->json($equipmentMovement->fresh()->load(['product', 'client', 'location', 'personnel']));
     }
 
     public function destroy(EquipmentMovement $equipmentMovement): JsonResponse
@@ -64,40 +54,22 @@ class EquipmentMovementController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function rules(): array
+    private function rules(bool $isUpdate = false): array
     {
+        $requiredOrSometimes = $isUpdate ? 'sometimes' : 'required';
+
         return [
-            'product_id' => ['required', 'exists:products,id'],
+            'product_id' => [$requiredOrSometimes, 'exists:products,id'],
             'client_id' => ['nullable', 'exists:clients,id'],
-            'type' => ['required', Rule::in(['entrada', 'salida', 'renta', 'venta', 'mantenimiento'])],
+            'location_id' => ['nullable', 'exists:locations,id'],
+            'personnel_id' => [$requiredOrSometimes, 'exists:personnel,id'],
+            'type' => [$requiredOrSometimes, Rule::in(['entrada', 'salida', 'renta', 'venta', 'mantenimiento'])],
+            'current_counter_bw' => ['nullable', 'integer', 'min:0'],
+            'current_counter_color' => ['nullable', 'integer', 'min:0'],
+            'counter_read_at' => ['nullable', 'date'],
             'date_out' => ['nullable', 'date'],
             'date_return' => ['nullable', 'date', 'after_or_equal:date_out'],
             'notes' => ['nullable', 'string'],
         ];
-    }
-
-    private function syncProductInventoryStatus(EquipmentMovement $movement): void
-    {
-        $product = Product::query()->find($movement->product_id);
-
-        if (! $product) {
-            return;
-        }
-
-        $status = match ($movement->type) {
-            'entrada' => InventoryStatus::DISPONIBLE,
-            'salida', 'renta' => InventoryStatus::RENTADO,
-            'venta' => InventoryStatus::VENDIDO,
-            'mantenimiento' => InventoryStatus::MANTENIMIENTO,
-            default => $product->inventory_status,
-        };
-
-        if ($movement->date_return && $movement->type !== 'venta') {
-            $status = InventoryStatus::DISPONIBLE;
-        }
-
-        $product->update([
-            'inventory_status' => $status,
-        ]);
     }
 }

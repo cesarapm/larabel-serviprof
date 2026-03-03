@@ -20,9 +20,9 @@ class EquipmentMovementResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $navigationLabel = 'Movimientos';
+    protected static ?string $navigationLabel = 'Mov. equipos';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Procesos';
+    protected static string|\UnitEnum|null $navigationGroup = 'Movimientos';
 
     protected static ?int $navigationSort = 1;
 

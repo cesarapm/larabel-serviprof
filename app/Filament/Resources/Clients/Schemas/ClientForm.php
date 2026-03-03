@@ -22,6 +22,17 @@ class ClientForm
                     ->default(null),
                 TextInput::make('address')
                     ->default(null),
+                TextInput::make('rfc')
+                    ->label('RFC')
+                    ->maxLength(13)
+                    ->default(null),
+                TextInput::make('company')
+                    ->default(null),
+                TextInput::make('contact_name')
+                    ->label('Contact Name')
+                    ->default(null),
+                TextInput::make('department')
+                    ->default(null),
             ]);
     }
 }

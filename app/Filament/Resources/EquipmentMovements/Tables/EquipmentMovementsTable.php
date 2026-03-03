@@ -22,8 +22,23 @@ class EquipmentMovementsTable
                     ->searchable(),
                 TextColumn::make('client.name')
                     ->searchable(),
+                TextColumn::make('location.name')
+                    ->label('Ubicación')
+                    ->searchable(),
+                TextColumn::make('personnel.name')
+                    ->label('Personal')
+                    ->searchable(),
                 TextColumn::make('type')
                     ->badge(),
+                TextColumn::make('current_counter_bw')
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('current_counter_color')
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('counter_read_at')
+                    ->date()
+                    ->sortable(),
                 TextColumn::make('date_out')
                     ->date()
                     ->sortable(),

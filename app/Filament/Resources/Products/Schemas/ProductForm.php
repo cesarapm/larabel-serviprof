@@ -9,7 +9,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Schema;
-
+use App\Models\Personnel;
 class ProductForm
 {
     public static function configure(Schema $schema): Schema
@@ -32,20 +32,24 @@ class ProductForm
                 TextInput::make('current_counter_bw')
                     ->label('Contador actual BN')
                     ->numeric()
-                    ->minValue(0),
+                    ->minValue(0)
+                    ->visibleOn('create'),
                 TextInput::make('current_counter_color')
                     ->label('Contador actual Color')
                     ->numeric()
-                    ->minValue(0),
+                    ->minValue(0)
+                    ->visibleOn('create'),
                 DatePicker::make('counter_read_at')
-                    ->label('Fecha de contador'),
+                    ->label('Fecha de contador')
+                    ->visibleOn('create'),
                 Select::make('status')
                     ->options(EquipmentStatus::class)
                     ->required(),
                 Select::make('inventory_status')
                     ->options(InventoryStatus::class)
                     ->default('disponible')
-                    ->required(),
+                    ->required()
+                    ->visibleOn('create'),
                 Select::make('classification')
                     ->label('Clasificación')
                     ->options([
@@ -87,7 +91,15 @@ class ProductForm
                     ->prefix('$'),
                 Select::make('location_id')
                     ->relationship('location', 'name')
-                    ->required(),
+                    ->required()
+                    ->visibleOn('create'),
+                Select::make('personnel_id')
+                   ->label('Personal alta')
+                    ->options(fn () => Personnel::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))
+                    ->searchable()
+                    ->preload()
+                    ->required()
+                       ->visibleOn('create'),
                 DatePicker::make('entry_date')
                     ->required(),
                 Textarea::make('notes')

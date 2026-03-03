@@ -65,6 +65,15 @@ class ClientController extends Controller
                 Rule::unique('clients', 'email')->ignore($clientId),
             ],
             'address' => ['nullable', 'string', 'max:255'],
+            'rfc' => [
+                'nullable',
+                'string',
+                'size:13',
+                Rule::unique('clients', 'rfc')->ignore($clientId),
+            ],
+            'company' => ['nullable', 'string', 'max:255'],
+            'contact_name' => ['nullable', 'string', 'max:255'],
+            'department' => ['nullable', 'string', 'max:255'],
         ];
     }
 }
