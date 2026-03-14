@@ -2,13 +2,16 @@
 
 namespace App\Filament\Resources\Locations\Schemas;
 
-use App\Models\Client;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
 class LocationForm
 {
+    /**
+     * Tipos de ubicación que se pueden crear manualmente.
+     * El tipo 'cliente' se genera automáticamente al crear un Cliente.
+     */
     public static function configure(Schema $schema): Schema
     {
         return $schema
@@ -19,19 +22,17 @@ class LocationForm
                     ->label('Sub-ubicación (rack / zona)')
                     ->maxLength(255),
                 Select::make('type')
+                    ->label('Tipo')
                     ->options([
-                        'almacen_apodaca' => 'Almacén Apodaca',
-                        'taller' => 'Taller',
-                        'transito' => 'Tránsito',
-                        'cliente' => 'Cliente',
+                        'almacen_apodaca'     => 'Almacén Apodaca',
+                        'taller'              => 'Taller',
+                        'transito'            => 'Tránsito',
                         'baja_canibalizacion' => 'Baja / Canibalización',
-                        'demo_showroom' => 'Demo / Showroom',
+                        'demo_showroom'       => 'Demo / Showroom',
                     ])
+                    ->helperText('Las ubicaciones de cliente se crean automáticamente al registrar un cliente.')
                     ->required(),
-                Select::make('client_id')
-                    ->label('Cliente (solo si tipo = Cliente)')
-                    ->options(fn () => Client::query()->orderBy('name')->pluck('name', 'id')->all())
-                    ->nullable(),
+                // client_id se gestiona solo de forma automática; no se expone en el formulario manual.
             ]);
     }
 }

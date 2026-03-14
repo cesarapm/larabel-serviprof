@@ -13,7 +13,10 @@ class ConsumableMovement extends Model
 
     protected static function booted(): void
     {
-        static::created(fn (ConsumableMovement $movement) => self::syncConsumableInventory($movement->consumable_id));
+        static::created(function (ConsumableMovement $movement): void {
+            self::applyAlmacenDelta($movement, +1);
+            self::syncConsumableInventory($movement->consumable_id);
+        });
 
         static::updated(function (ConsumableMovement $movement): void {
             self::syncConsumableInventory($movement->consumable_id);
@@ -28,13 +31,48 @@ class ConsumableMovement extends Model
             }
         });
 
-        static::deleted(fn (ConsumableMovement $movement) => self::syncConsumableInventory($movement->consumable_id));
+        static::deleted(function (ConsumableMovement $movement): void {
+            self::applyAlmacenDelta($movement, -1);
+            self::syncConsumableInventory($movement->consumable_id);
+        });
+    }
+
+    /**
+     * Aplica (o revierte cuando $sign = -1) el delta en la tabla almacen
+     * que corresponde a este movimiento.
+     */
+    private static function applyAlmacenDelta(ConsumableMovement $movement, int $sign): void
+    {
+        $id  = $movement->consumable_id;
+        $loc = $movement->location_id;
+        $qty = (int) $movement->quantity * $sign;
+
+        match ($movement->type) {
+            'entrada', 'ajuste' => $loc ? Almacen::adjustConsumableStock($id, $loc, +$qty) : null,
+            'salida', 'vendido' => $loc
+                ? Almacen::adjustConsumableStock($id, $loc, -$qty)
+                : Almacen::greedyDeductConsumableStock($id, abs($qty)),
+            'movimiento_interno' => (function () use ($movement, $sign, $id, $loc, $qty): void {
+                $fromLoc = $movement->from_location_id;
+                if ($fromLoc && $loc) {
+                    if ($sign > 0) {
+                        // Movimiento normal: de from_location_id → location_id
+                        Almacen::moveConsumableStock($id, $fromLoc, $loc, abs($qty));
+                    } else {
+                        // Reversión al eliminar: deshacer el traslado
+                        Almacen::moveConsumableStock($id, $loc, $fromLoc, abs($qty));
+                    }
+                }
+            })(),
+            default => null,
+        };
     }
 
     protected $fillable = [
         'consumable_id',
         'client_id',
         'location_id',
+        'from_location_id',
         'personnel_id',
         'type',
         'quantity',
@@ -65,6 +103,11 @@ class ConsumableMovement extends Model
         return $this->belongsTo(Location::class);
     }
 
+    public function fromLocation(): BelongsTo
+    {
+        return $this->belongsTo(Location::class, 'from_location_id');
+    }
+
     public function personnel(): BelongsTo
     {
         return $this->belongsTo(Personnel::class);
@@ -78,18 +121,17 @@ class ConsumableMovement extends Model
             return;
         }
 
-        $balance = (int) self::query()
-            ->where('consumable_id', $consumableId)
-            ->selectRaw("COALESCE(SUM(CASE WHEN type = 'entrada' THEN quantity WHEN type = 'salida' THEN -quantity WHEN type = 'ajuste' THEN quantity ELSE 0 END), 0) AS balance")
-            ->value('balance');
+        // La fuente de verdad del stock actual es la tabla almacen.
+        // applyAlmacenDelta la mantiene actualizada en cada movimiento,
+        // por lo que no dependemos de tener todos los movimientos históricos.
+        $stockQuantity = (int) Almacen::where('consumable_id', $consumableId)->sum('quantity');
 
-        $stockQuantity = max(0, $balance);
-        $stockReserved = min((int) $consumable->stock_reserved, $stockQuantity);
+        $stockReserved   = min((int) $consumable->stock_reserved, $stockQuantity);
         $inventoryStatus = $stockQuantity > 0 ? InventoryStatus::DISPONIBLE : InventoryStatus::VENDIDO;
 
         $consumable->update([
-            'stock_quantity' => $stockQuantity,
-            'stock_reserved' => $stockReserved,
+            'stock_quantity'   => $stockQuantity,
+            'stock_reserved'   => $stockReserved,
             'inventory_status' => $inventoryStatus,
         ]);
     }

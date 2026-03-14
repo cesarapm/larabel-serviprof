@@ -99,7 +99,7 @@ class EquipmentMovement extends Model
         $movementType = strtolower(trim((string) $latestMovement->type));
 
         $status = match ($movementType) {
-            'entrada' => InventoryStatus::DISPONIBLE,
+            'entrada', 'movimiento_interno', 'retorno' => InventoryStatus::DISPONIBLE,
             'salida', 'renta' => InventoryStatus::RENTADO,
             'venta' => InventoryStatus::VENDIDO,
             'mantenimiento' => InventoryStatus::MANTENIMIENTO,
@@ -110,13 +110,12 @@ class EquipmentMovement extends Model
             $status = InventoryStatus::DISPONIBLE;
         }
 
-        $payload = ['inventory_status' => $status];
+        $product->update(['inventory_status' => $status]);
 
+        // Actualizar ubicación en almacen (no en el propio producto)
         if ($latestMovement->location_id) {
-            $payload['location_id'] = $latestMovement->location_id;
+            Almacen::moveProduct($product->id, $latestMovement->location_id);
         }
-
-        $product->update($payload);
     }
 
     private static function syncProductInventoryStatus(int $productId): void

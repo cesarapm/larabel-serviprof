@@ -17,7 +17,7 @@ class ProductForm
         return $schema
             ->components([
                 Select::make('type')
-                    ->options(['copiadora' => 'Copiadora', 'impresora' => 'Impresora'])
+                    ->options(['copiadora' => 'Copiadora', 'impresora' => 'Impresora', 'multifuncional_laser' => 'Multifuncional Láser', 'multifuncional_tinta' => 'Multifuncional Tinta', 'plotter' => 'Plotter'])
                     ->required(),
                 TextInput::make('brand')
                     ->required(),

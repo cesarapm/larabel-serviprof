@@ -23,8 +23,9 @@ class Location extends Model
         return $this->belongsTo(Client::class);
     }
 
-    public function products(): HasMany
+    /** Ítems (equipos y consumibles) que están en esta ubicación */
+    public function almacen(): HasMany
     {
-        return $this->hasMany(Product::class);
+        return $this->hasMany(Almacen::class);
     }
 }

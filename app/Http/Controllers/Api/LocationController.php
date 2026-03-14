@@ -14,7 +14,7 @@ class LocationController extends Controller
     {
         $locations = Location::query()
             ->with('client:id,name')
-            ->withCount('products')
+            ->withCount('almacen')
             ->latest()
             ->paginate($request->integer('per_page', 15));
 
@@ -32,7 +32,7 @@ class LocationController extends Controller
 
     public function show(Location $location): JsonResponse
     {
-        return response()->json($location->load(['products', 'client']));
+        return response()->json($location->load(['almacen.product', 'almacen.consumable', 'client']));
     }
 
     public function update(Request $request, Location $location): JsonResponse

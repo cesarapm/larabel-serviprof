@@ -5,8 +5,8 @@ namespace App\Models;
 use App\Enums\EquipmentStatus;
 use App\Enums\InventoryStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
@@ -28,7 +28,6 @@ class Product extends Model
         'acquisition_date',
         'book_value',
         'depreciation_amount',
-        'location_id',
         'entry_date',
         'notes',
     ];
@@ -39,7 +38,6 @@ class Product extends Model
             'status' => EquipmentStatus::class,
             'inventory_status' => InventoryStatus::class,
             'entry_date' => 'date',
-            // 'counter_read_at' => 'date',
             'acquisition_date' => 'date',
             'acquisition_cost' => 'decimal:2',
             'book_value' => 'decimal:2',
@@ -47,9 +45,10 @@ class Product extends Model
         ];
     }
 
-    public function location(): BelongsTo
+    /** Entrada en la tabla almacen que indica la ubicación actual del equipo. */
+    public function almacen(): HasOne
     {
-        return $this->belongsTo(Location::class);
+        return $this->hasOne(Almacen::class, 'product_id');
     }
 
     public function movements(): HasMany

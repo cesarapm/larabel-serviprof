@@ -37,7 +37,7 @@ class ConsumableMovementsTable
                     ->label('Cliente')
                     ->searchable(),
                 TextColumn::make('location.name')
-                    ->label('Ubicación mov.')
+                    ->label('Ubicación destino')
                     ->searchable(),
                 TextColumn::make('personnel.name')
                     ->label('Personal')
@@ -68,9 +68,10 @@ class ConsumableMovementsTable
             ->filters([
                 SelectFilter::make('type')
                     ->options([
-                        'entrada' => 'Entrada',
-                        'salida' => 'Salida',
-                        'ajuste' => 'Ajuste',
+                        'entrada'            => 'Entrada',
+                        'salida'             => 'Salida',
+                        'ajuste'             => 'Ajuste',
+                        'movimiento_interno' => 'Movimiento interno',
                     ]),
             ])
             ->recordActions([

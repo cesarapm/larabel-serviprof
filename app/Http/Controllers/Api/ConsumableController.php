@@ -16,7 +16,7 @@ class ConsumableController extends Controller
     public function index(Request $request): JsonResponse
     {
         $consumables = Consumable::query()
-            ->with('location')
+            ->with(['almacen.location'])
             ->latest()
             ->paginate($request->integer('per_page', 15));
 
@@ -31,28 +31,43 @@ class ConsumableController extends Controller
         ));
 
         $consumable = DB::transaction(function () use ($data): Consumable {
-            $consumable = Consumable::create(array_diff_key($data, array_flip(['personnel_id'])));
+            // Separar campos que van a almacen (no al modelo consumable)
+            $locationId  = $data['location_id'] ?? null;
+            $subLocation = $data['sub_location'] ?? null;
 
+            $consumable = Consumable::create(array_diff_key(
+                $data,
+                array_flip(['personnel_id', 'location_id', 'sub_location'])
+            ));
+
+            // El movimiento de entrada dispara applyAlmacenDelta → crea fila en almacen
             ConsumableMovement::create([
                 'consumable_id' => $consumable->id,
-                'client_id' => null,
-                'location_id' => $consumable->location_id,
-                'personnel_id' => $data['personnel_id'],
-                'type' => 'entrada',
-                'quantity' => (int) $consumable->stock_quantity,
+                'client_id'     => null,
+                'location_id'   => $locationId,
+                'personnel_id'  => $data['personnel_id'],
+                'type'          => 'entrada',
+                'quantity'      => (int) $consumable->stock_quantity,
                 'movement_date' => now()->toDateString(),
-                'notes' => 'Alta inicial de consumible',
+                'notes'         => 'Alta inicial de consumible',
             ]);
+
+            // Guardar sub_location en la fila del almacen recén creada
+            if ($subLocation && $locationId) {
+                \App\Models\Almacen::where('consumable_id', $consumable->id)
+                    ->where('location_id', $locationId)
+                    ->update(['sub_location' => $subLocation]);
+            }
 
             return $consumable;
         });
 
-        return response()->json($consumable->load(['movements', 'location']), 201);
+        return response()->json($consumable->load(['movements', 'almacen.location']), 201);
     }
 
     public function show(Consumable $consumable): JsonResponse
     {
-        return response()->json($consumable->load(['location', 'movements.client', 'movements.location', 'movements.personnel']));
+        return response()->json($consumable->load(['almacen.location', 'movements.client', 'movements.location', 'movements.fromLocation', 'movements.personnel']));
     }
 
     public function update(Request $request, Consumable $consumable): JsonResponse
@@ -63,9 +78,9 @@ class ConsumableController extends Controller
 
         $data = $request->validate($this->rules(true));
 
-        $consumable->update($data);
+        $consumable->update(array_diff_key($data, array_flip(['location_id', 'sub_location'])));
 
-        return response()->json($consumable->fresh()->load('location'));
+        return response()->json($consumable->fresh()->load(['almacen.location']));
     }
 
     public function destroy(Consumable $consumable): JsonResponse
@@ -96,7 +111,8 @@ class ConsumableController extends Controller
             'stock_reserved' => ['nullable', 'integer', 'min:0', 'lte:stock_quantity'],
             'batch' => ['nullable', 'string', 'max:255'],
             'supplier' => ['nullable', 'string', 'max:255'],
-            'location_id' => [$requiredOrSometimes, 'exists:locations,id'],
+            // location_id y sub_location van a tabla almacen (sólo para store)
+            'location_id' => ['nullable', 'exists:locations,id'],
             'sub_location' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string'],
             'inventory_status' => [$requiredOrSometimes, Rule::in(['disponible', 'rentado', 'vendido', 'mantenimiento'])],

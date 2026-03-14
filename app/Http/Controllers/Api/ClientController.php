@@ -13,6 +13,7 @@ class ClientController extends Controller
     public function index(Request $request): JsonResponse
     {
         $clients = Client::query()
+            ->with('location:id,client_id,name,type,sub_location')
             ->withCount('equipmentMovements')
             ->latest()
             ->paginate($request->integer('per_page', 15));
@@ -26,12 +27,12 @@ class ClientController extends Controller
 
         $client = Client::create($data);
 
-        return response()->json($client, 201);
+        return response()->json($client->load('location:id,client_id,name,type,sub_location'), 201);
     }
 
     public function show(Client $client): JsonResponse
     {
-        return response()->json($client->load('equipmentMovements.product'));
+        return response()->json($client->load(['location:id,client_id,name,type,sub_location', 'equipmentMovements.product']));
     }
 
     public function update(Request $request, Client $client): JsonResponse
@@ -40,7 +41,7 @@ class ClientController extends Controller
 
         $client->update($data);
 
-        return response()->json($client->fresh());
+        return response()->json($client->fresh()->load('location:id,client_id,name,type,sub_location'));
     }
 
     public function destroy(Client $client): JsonResponse

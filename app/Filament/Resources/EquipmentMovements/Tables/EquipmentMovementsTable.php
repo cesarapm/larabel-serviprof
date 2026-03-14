@@ -23,7 +23,7 @@ class EquipmentMovementsTable
                 TextColumn::make('client.name')
                     ->searchable(),
                 TextColumn::make('location.name')
-                    ->label('Ubicación')
+                    ->label('Ubicación destino')
                     ->searchable(),
                 TextColumn::make('personnel.name')
                     ->label('Personal')
@@ -57,11 +57,12 @@ class EquipmentMovementsTable
             ->filters([
                 SelectFilter::make('type')
                     ->options([
-                        'entrada' => 'Entrada',
-                        'salida' => 'Salida',
-                        'renta' => 'Renta',
-                        'venta' => 'Venta',
-                        'mantenimiento' => 'Mantenimiento',
+                        'entrada'            => 'Entrada',
+                        'salida'             => 'Salida',
+                        'renta'              => 'Renta',
+                        'venta'              => 'Venta',
+                        'mantenimiento'      => 'Mantenimiento',
+                        'movimiento_interno' => 'Movimiento interno',
                     ]),
             ])
             ->recordActions([

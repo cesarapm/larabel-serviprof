@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Enums\EquipmentStatus;
 use App\Enums\InventoryStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Model;
 
@@ -23,13 +22,11 @@ class Consumable extends Model
         'status',
         'inventory_status',
         'unit',
-        'stock_quantity',
+        'stock_quantity',   // Total global (suma de todas las filas en almacen)
         'minimum_stock',
         'stock_reserved',
         'batch',
         'supplier',
-        'location_id',
-        'sub_location',
         'notes',
     ];
 
@@ -41,9 +38,10 @@ class Consumable extends Model
         ];
     }
 
-    public function location(): BelongsTo
+    /** Filas en tabla almacen: una por ubicación donde haya stock */
+    public function almacen(): HasMany
     {
-        return $this->belongsTo(Location::class);
+        return $this->hasMany(Almacen::class, 'consumable_id');
     }
 
     public function movements(): HasMany
