@@ -8,12 +8,14 @@ use App\Models\Consumable;
 use App\Models\ConsumableMovement;
 use App\Models\EquipmentMovement;
 use App\Models\Product;
-use Illuminate\Container\Attributes\Log;
+
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
+
 
 /**
  * Recibe un arreglo de movimientos (equipos o consumibles) y los procesa
@@ -128,6 +130,7 @@ class BulkMovementController extends Controller
     public function consumables(Request $request): JsonResponse
     {
 
+    Log::debug('Iniciando bulk consumable movement', ['request' => $request->all()]);
 
         $globalData = $request->validate([
             'type'          => ['required', Rule::in(['entrada', 'salida', 'ajuste', 'movimiento_interno', 'vendido'])],
@@ -143,6 +146,7 @@ class BulkMovementController extends Controller
             'rows.*.quantity'          => ['required', 'integer', 'min:1'],
             'rows.*.location_id'       => ['nullable', 'exists:locations,id'],
             'rows.*.from_location_id'  => ['nullable', 'exists:locations,id'],
+            'rows.*.client_id'         => ['nullable', 'exists:clients,id'],
             'rows.*.notes'             => ['nullable', 'string'],
         ]);
 
@@ -174,7 +178,7 @@ class BulkMovementController extends Controller
                     'consumable_id'    => $row['consumable_id'],
                     'type'             => $globalData['type'],
                     'personnel_id'     => $globalData['personnel_id'],
-                    'client_id'        => $globalData['client_id'] ?? null,
+                    'client_id'        => $row['client_id'] ?? ($globalData['client_id'] ?? null),
                     'location_id'      => $row['location_id'] ?? ($globalData['location_id'] ?? null),
                     'from_location_id' => $row['from_location_id'] ?? null,
                     'quantity'         => $row['quantity'],
